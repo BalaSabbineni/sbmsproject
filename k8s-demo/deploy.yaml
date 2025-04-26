@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-registry
+spec: # This spec for deployment
+  selector:
+    matchLabels:
+      app: service-registry
+  template: # This is for pods
+    metadata:
+      labels:
+        app: service-registry # this one should match with matchLabels above
+    spec:
+      containers:
+        - name: service-registry
+          image: balasabbineni97/service-registry
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8761

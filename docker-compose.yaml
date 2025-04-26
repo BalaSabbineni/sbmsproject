@@ -1,0 +1,68 @@
+version: '3'
+services:
+  service-registry:
+    image: 'balasabbineni97/service-registry:0.0.1'
+    container_name: service-registry
+    ports:
+      - '8761:8761'
+  config-server:
+    image: 'balasabbineni97/config-server:0.0.1'
+    container_name: config-server
+    ports:
+      - '9296:9296'
+    depends_on:
+      - service-registry
+    environment:
+      - EurekaUrl=service-registry # In docker compose every service on same network, so we can use service instead of host.docker.internal as ENV variable
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://config-server:9296/actuator/health" ]
+      interval: 11s
+      timeout: 6s
+      retries: 6
+  api-gateway: #start this after config server is healthy, otherwise we get this error (org.springframework.cloud.config.client.ConfigClientFailFastException: Could not locate PropertySource and the resource is not optional, failing)
+    image: 'balasabbineni97/api-gateway:0.0.1'
+    container_name: api-gateway
+    ports:
+      - '9090:9090'
+    depends_on:
+      config-server:
+        condition: service_healthy
+    environment:
+      - EurekaUrl=service-registry # In docker compose every service on same network, so we can use service instead of host.docker.internal as ENV variable
+      - CONFIG_SERVER=config-server # In docker compose every service on same network, so we can use service instead of host.docker.internal as ENV variable
+  product-service: #start this after config server is healthy, otherwise we get this error (org.springframework.cloud.config.client.ConfigClientFailFastException: Could not locate PropertySource and the resource is not optional, failing)
+    image: 'balasabbineni97/product-service:0.0.1'
+    container_name: product-service
+    ports:
+      - '8080:8080'
+    depends_on:
+      config-server:
+        condition: service_healthy
+    environment:
+      - EurekaUrl=service-registry # In docker compose every service on same network, so we can use service instead of host.docker.internal as ENV variable
+      - CONFIG_SERVER=config-server # In docker compose every service on same network, so we can use service instead of host.docker.internal as ENV variable
+      - DB_HOST=host.docker.internal
+  payment-service: #start this after config server is healthy, otherwise we get this error (org.springframework.cloud.config.client.ConfigClientFailFastException: Could not locate PropertySource and the resource is not optional, failing)
+    image: 'balasabbineni97/payment-service:0.0.1'
+    container_name: payment-service
+    ports:
+      - '8081:8081'
+    depends_on:
+      config-server:
+        condition: service_healthy
+    environment:
+      - EurekaUrl=service-registry # In docker compose every service on same network, so we can use service instead of host.docker.internal as ENV variable
+      - CONFIG_SERVER=config-server # In docker compose every service on same network, so we can use service instead of host.docker.internal as ENV variable
+      - DB_HOST=host.docker.internal
+  order-service: #start this after config server is healthy, otherwise we get this error (org.springframework.cloud.config.client.ConfigClientFailFastException: Could not locate PropertySource and the resource is not optional, failing)
+    image: 'balasabbineni97/order-service:0.0.1'
+    container_name: order-service
+    ports:
+      - '8082:8082'
+    depends_on:
+      config-server:
+        condition: service_healthy
+    environment:
+      - EurekaUrl=service-registry # In docker compose every service on same network, so we can use service instead of host.docker.internal as ENV variable
+      - CONFIG_SERVER=config-server # In docker compose every service on same network, so we can use service instead of host.docker.internal as ENV variable
+      - DB_HOST=host.docker.internal

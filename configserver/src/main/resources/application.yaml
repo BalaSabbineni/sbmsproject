@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: Config-Server
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/BalaSabbineni/spiring-app-config.git
+          clone-on-start: true
+          skipSslValidation: true
+
+server:
+  port: 9296
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    fetch-registry: true
+    registry-with-eureka: true
+    service-url:
+      defaultZone: ${EurekaUrl:http://localhost:8761/eureka}
